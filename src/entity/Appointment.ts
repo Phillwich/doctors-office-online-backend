@@ -4,6 +4,9 @@ import { User } from "./User";
 export class Appointment {
 
   @Column()
+  id: string;
+
+  @Column()
   date: string;
 
   @Column()
