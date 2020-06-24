@@ -1,4 +1,5 @@
 import { Entity, ObjectIdColumn, ObjectID, Column } from "typeorm";
+import { Appointment } from "./Appointment";
 
 @Entity()
 export class Surgery {
@@ -23,4 +24,7 @@ export class Surgery {
 
   @Column()
   phone: string;
+
+  @Column(type => Appointment)
+  appointments: Appointment[]
 }
