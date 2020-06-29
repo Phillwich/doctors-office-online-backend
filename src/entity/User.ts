@@ -22,5 +22,5 @@ export class User {
     isAdmin: Boolean;
 
     @Column()
-    appointments: string[];
+    appointments: ObjectID[];
 }

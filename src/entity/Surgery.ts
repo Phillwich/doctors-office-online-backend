@@ -26,5 +26,14 @@ export class Surgery {
   phone: string;
 
   @Column()
-  appointments: string[];
+  appointments: ObjectID[];
+
+  @Column()
+  calendar: {
+    monday: number[],
+    tuesday: number[],
+    wednesday: number[],
+    thursday: number[],
+    friday: number[]
+  }
 }
