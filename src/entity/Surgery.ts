@@ -25,6 +25,6 @@ export class Surgery {
   @Column()
   phone: string;
 
-  @Column(type => Appointment)
-  appointments: Appointment[]
+  @Column()
+  appointments: string[];
 }

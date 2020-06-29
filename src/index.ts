@@ -8,6 +8,7 @@ import "./controller/userController";
 import "./controller/authController";
 import "./controller/registerController";
 import "./controller/surgeryController";
+import "./controller/appointmentController";
 
 (async () => {
     const container = await createContainer();

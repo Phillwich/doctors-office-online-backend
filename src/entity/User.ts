@@ -20,4 +20,7 @@ export class User {
 
     @Column({ default: false })
     isAdmin: Boolean;
+
+    @Column()
+    appointments: string[];
 }

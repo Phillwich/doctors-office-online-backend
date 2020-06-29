@@ -1,10 +1,10 @@
 import { Entity, ObjectID, ObjectIdColumn, Column, Timestamp } from "typeorm";
-import { User } from "./User";
 
+@Entity()
 export class Appointment {
 
-  @Column()
-  id: string;
+  @ObjectIdColumn()
+  _id: ObjectID;
 
   @Column()
   date: string;
@@ -18,14 +18,10 @@ export class Appointment {
   @Column()
   endTime: string;
 
-  @Column(type => User)
-  user: User;
+  @Column()
+  userId: string
 
-  constructor(date: string, description: string, startTime: string, endTime: string, user: User) {
-    this.date = date;
-    this.description = description;
-    this.startTime = startTime;
-    this.endTime = endTime;
-    this.user = user;
-  }
+  @Column()
+  surgeryId: string
+  
 }

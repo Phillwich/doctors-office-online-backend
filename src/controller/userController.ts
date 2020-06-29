@@ -28,6 +28,8 @@ class UserController implements interfaces.Controller {
     })
   }
 
+  
+
 }
 
 export default UserController
