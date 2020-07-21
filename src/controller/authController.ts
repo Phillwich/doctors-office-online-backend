@@ -10,11 +10,9 @@ import { User } from "../entity/User";
 
 @controller('/login')
 class AuthController implements interfaces.Controller {
-  private connection: Connection;
   private userRepository: Repository<User>;
 
-  constructor(@inject(Connection) connection: Connection) {
-    this.connection = this.connection;
+  constructor() {
     this.userRepository = getRepository(User);
   }
 
@@ -24,9 +22,9 @@ class AuthController implements interfaces.Controller {
 
     const user: User[] = await this.userRepository.find({ email });
   
-    if (user.length === 0) return response.send("Nutzer existiert nicht");
+    if (user.length === 0) return response.status(400).json({ message: "Nutzer existiert nicht" });
     
-    if (!bcrypt.compareSync(password, user[0].password)) return response.send("Falsches Passwort");
+    if (!bcrypt.compareSync(password, user[0].password)) return response.status(404).json({ message: "Falsches Passwort" });
 
     const token = jwt.sign({ _id: user[0]._id }, config.get("SUPER_SECRET"), { expiresIn: 60 * 30 });
 

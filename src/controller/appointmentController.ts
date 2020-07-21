@@ -1,5 +1,5 @@
-import { controller, interfaces, httpPost } from "inversify-express-utils";
-import { Connection, Repository, getRepository } from "typeorm";
+import { controller, interfaces, httpPost, httpGet } from "inversify-express-utils";
+import { Connection, Repository, getRepository, ObjectID } from "typeorm";
 import { Response, Request } from "express";
 import { inject } from "inversify";
 
@@ -10,13 +10,11 @@ import { Surgery } from "../entity/Surgery";
 
 @controller('/appointment')
 class AppointmentController implements interfaces.Controller {
-  private connection: Connection;
   private appointmentRepository: Repository<Appointment>;
-  private surgeryRepository: Repository<Surgery>;  
+  private surgeryRepository: Repository<Surgery>;
   private userRepository: Repository<User>;
 
-  constructor(@inject(Connection) connection: Connection) {
-    this.connection = this.connection;
+  constructor() {
     this.appointmentRepository = getRepository(Appointment);
     this.surgeryRepository = getRepository(Surgery);
     this.userRepository = getRepository(User);
@@ -27,38 +25,104 @@ class AppointmentController implements interfaces.Controller {
     const newAppointment: Appointment = request.body.appointment
     const userId: string = newAppointment.userId
     const surgeryId: string = newAppointment.surgeryId
+    
+    let appointmentCheck 
+    try {
+      appointmentCheck = await this.appointmentRepository.findOne({ date: newAppointment.date })
+    } catch (error) {
+      return response.status(500).json({
+        message: "Fehler beim Auflisten der Termine"
+      })
+    }
+
+    if (appointmentCheck) {
+      if (appointmentCheck.surgeryId === surgeryId) {
+        return response.status(400).json({
+          message: "Dieser Termin ist schon vergeben"
+        })
+      }
+    }
 
     let appointment: Appointment
     try {
       appointment = await this.appointmentRepository.save(newAppointment)
     } catch (error) {
       return response.status(500).json({
-        message: "Konnte keinen Termin erstellen"
+        message: "Fehler beim hinzufügen eines Termines"
       })
     }
 
+    let user: User
     try {
-      const user: User = await this.userRepository.findOne(userId)
-      user.appointments.push(appointment._id)
+      user = await this.userRepository.findOne(userId)
+    } catch (error) {
+      return response.status(500).json({
+        message: "Fehler beim Suchen des Nutzers"
+      })
+    }
+
+    user.appointments.push(appointment._id)
+
+    try {
       await this.userRepository.update(userId, user)
     } catch (error) {
       return response.status(500).json({
-        message: "Konnte Termin nicht dem Nutzer hinzufügen"
+        message: "Fehler beim Aktualisieren des Users"
       })
     }
 
+    let surgery: Surgery 
     try {
-      const surgery: Surgery = await this.surgeryRepository.findOne(surgeryId)
-      surgery.appointments.push(appointment._id)
+      surgery = await this.surgeryRepository.findOne(surgeryId)
+    } catch (error) {
+      return response.status(500).json({
+        message: "Fehler beim Suchen der Arztpraxis"
+      })
+    }
+    
+    surgery.appointments.push(appointment._id)
+
+    try {
       await this.surgeryRepository.update(surgeryId, surgery)
     } catch (error) {
       return response.status(500).json({
-        message: "Konnte Termin der Praxis nicht hinzufügen"
+        message: "Fehler beim Aktualisieren der Praxis"
       })
     }
 
     return response.status(200).json({
       message: "Termin wurde erstellt und hinzugefügt"
+    })
+  }
+
+  @httpGet("/:id", AuthMiddleware)
+  private async getAppointmentsFromUser(request: Request, response: Response): Promise<Response> {
+    const userId: string = request.params.id
+
+    let user: User
+    try {
+      user = await this.userRepository.findOne(userId)
+    } catch (error) {
+      return response.status(500).json({
+        message: "Fehler beim Suchen des Users"
+      })
+    }
+
+    if (!user) return response.status(404).json({ message: "Nutzer nicht gefunden" })
+
+    const appointmentIds: ObjectID[] = user.appointments
+
+    
+    try {
+      await this.appointmentRepository.findByIds(appointmentIds)
+    } catch (error) {
+      return response.status(500).json({
+        message: "Fehler beie Appointments suchen"
+      })
+    }
+
+    return response.status(200).json({
+      message: "Appointments gefunden"
     })
   }
 }

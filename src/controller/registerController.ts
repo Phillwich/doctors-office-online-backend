@@ -20,19 +20,27 @@ class RegisterController implements interfaces.Controller {
 
     const existingUser = await this.userRepository.find({ email: user.email });
   
-    if (existingUser.length > 0) return response.send('Benutzer existiert schon');
+    if (existingUser.length > 0) return response.status(400).json({ message: 'Benutzer existiert schon' });
 
     const salt = bcrypt.genSaltSync(10);
     user.password = bcrypt.hashSync(user.password, salt);
-
-    const savedUser: User = await (await this.userRepository.insert(user)).raw.ops[0];
+    user.appointments = []
+    user.isAdmin = false
+    
+    let savedUser: User
+    try {
+      savedUser = await (await this.userRepository.insert(user)).raw.ops[0];
+    } catch (error) {
+      return response.status(500).json({
+        message: "Fehler beim Speichern des Nutzers"
+      })
+    }
     
     return response.status(200).json({
       message: "Nutzer hinzugefügt",
       data: savedUser
     });
   }
-
 }
 
 export default RegisterController

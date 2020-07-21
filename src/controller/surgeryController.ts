@@ -1,5 +1,5 @@
 import { controller, interfaces, httpGet, httpPost, httpPut, httpDelete } from "inversify-express-utils";
-import { Repository, getRepository } from "typeorm";
+import { Repository, getRepository, ObjectID } from "typeorm";
 import { Request, Response } from "express";
 
 import { Surgery } from "../entity/Surgery";
@@ -21,13 +21,15 @@ class SurgeryController implements interfaces.Controller {
     const surgery: Surgery = request.body.surgery;
     const existingSurgery = await this.surgeryRepository.find({ email: surgery.email });
 
-    if (existingSurgery.length > 0) return response.send('Arzt Praxis existiert schon');
+    if (existingSurgery.length > 0) return response.status(400).send('Arzt Praxis existiert schon');
 
-    const savedUser: Surgery = await (await this.surgeryRepository.insert(surgery)).raw.ops[0];
+    surgery.appointments = []
+
+    const savedSurgery: Surgery = await (await this.surgeryRepository.insert(surgery)).raw.ops[0];
 
     return response.status(200).json({
       message: "Praxis hinzugefügt",
-      data: savedUser
+      data: savedSurgery
     });
   }
 
@@ -44,8 +46,17 @@ class SurgeryController implements interfaces.Controller {
   @httpGet("/:surgeryId", AuthMiddleware)
   private async getSurgery(request: Request, response: Response): Promise<Response> {
     const surgeryId = request.params.surgeryId
+    
+    let surgery: Surgery 
+    try {
+      surgery = await this.surgeryRepository.findOne(surgeryId)
+    } catch (error) {
+      return response.status(500).json({
+        message: "Fehler beim finden der Praxis"
+      })
+    }
 
-    const surgery: Surgery = await this.surgeryRepository.findOne(surgeryId)
+    if (surgery === undefined) return response.status(404).json({ message: 'Praxis existiert nicht' })
 
     return response.status(200).json({
       message: 'Praxis gefunden',
@@ -53,19 +64,50 @@ class SurgeryController implements interfaces.Controller {
     })
   }
 
-  // @httpPut("/:userId")
-  // private async updateSurgery(request: Request, response: Response): Promise<Response> {
+  @httpPut("/")
+  private async updateSurgery(request: Request, response: Response): Promise<Response> {
+    const updatedSurgery: Surgery = request.body.surgery
 
-  // }
+    let surgery: Surgery
+    try {
+      surgery = await this.surgeryRepository.findOne(updatedSurgery._id)
+    } catch (error) {
+      return response.status(500).json({
+        message: "Fehler beim suchen der Praxis"
+      })
+    }
+
+    if (surgery === undefined) return response.status(404).json({ message: 'Praxis existiert nicht' })
+
+    for (const key of Object.keys(updatedSurgery)) {
+      surgery[key] = updatedSurgery[key]
+    }
+
+    const surgeryId: ObjectID = surgery._id
+    delete surgery._id
+    
+    try {
+      await this.surgeryRepository.update(surgeryId, surgery)
+    } catch (error) {
+      return response.status(500).json({
+        message: "Fehler beim updaten der Praxis"
+      })
+    }
+
+    return response.status(200).json({
+      message: "Praxis erfolgreich geupdatet"
+    })
+  }
 
   @httpDelete("/:Id")
   private async deleteSurgery(request: Request, response: Response): Promise<Response> {
     const surgeryId = request.params.Id
+    
     try {
       await this.surgeryRepository.delete(surgeryId)
     } catch (error) {
       return response.status(500).json({
-        message: "Konnte nicht die Praxis löschen"
+        message: "Fehler beim Löschen der Praxis"
       })
     }
 

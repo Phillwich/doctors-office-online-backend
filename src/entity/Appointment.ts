@@ -7,16 +7,10 @@ export class Appointment {
   _id: ObjectID;
 
   @Column()
-  date: string;
+  date: Date;
 
   @Column()
   description: string;
-
-  @Column()
-  startTime: string;
-
-  @Column()
-  endTime: string;
 
   @Column()
   userId: string
