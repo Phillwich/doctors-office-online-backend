@@ -12,7 +12,7 @@ import "./controller/appointmentController";
 
 (async () => {
     const container = await createContainer();
-    const port = process.env.APP_PORT ? process.env.APP_PORT : 3000
+    const port = process.env.PORT || 3000
     
     let server = new InversifyExpressServer(container);
     server.setConfig((application) => {
