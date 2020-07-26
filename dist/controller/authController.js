@@ -8,15 +8,11 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-var __param = (this && this.__param) || function (paramIndex, decorator) {
-    return function (target, key) { decorator(target, key, paramIndex); }
-};
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
         function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
         function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
@@ -50,14 +46,12 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 Object.defineProperty(exports, "__esModule", { value: true });
 var inversify_express_utils_1 = require("inversify-express-utils");
 var typeorm_1 = require("typeorm");
-var inversify_1 = require("inversify");
-var bcrypt = require("bcrypt");
+var bcrypt = require("bcryptjs");
 var jwt = require("jsonwebtoken");
 var config = require("config");
 var User_1 = require("../entity/User");
 var AuthController = /** @class */ (function () {
-    function AuthController(connection) {
-        this.connection = this.connection;
+    function AuthController() {
         this.userRepository = typeorm_1.getRepository(User_1.User);
     }
     AuthController.prototype.login = function (request, response) {
@@ -71,9 +65,9 @@ var AuthController = /** @class */ (function () {
                     case 1:
                         user = _b.sent();
                         if (user.length === 0)
-                            return [2 /*return*/, response.send("Nutzer existiert nicht")];
+                            return [2 /*return*/, response.status(400).json({ message: "Nutzer existiert nicht" })];
                         if (!bcrypt.compareSync(password, user[0].password))
-                            return [2 /*return*/, response.send("Falsches Passwort")];
+                            return [2 /*return*/, response.status(404).json({ message: "Falsches Passwort" })];
                         token = jwt.sign({ _id: user[0]._id }, config.get("SUPER_SECRET"), { expiresIn: 60 * 30 });
                         delete user[0].password;
                         return [2 /*return*/, response.status(200).json({
@@ -95,8 +89,7 @@ var AuthController = /** @class */ (function () {
     ], AuthController.prototype, "login", null);
     AuthController = __decorate([
         inversify_express_utils_1.controller('/login'),
-        __param(0, inversify_1.inject(typeorm_1.Connection)),
-        __metadata("design:paramtypes", [typeorm_1.Connection])
+        __metadata("design:paramtypes", [])
     ], AuthController);
     return AuthController;
 }());

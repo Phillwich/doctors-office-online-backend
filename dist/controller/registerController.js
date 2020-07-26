@@ -9,11 +9,10 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
         function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
         function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
@@ -47,7 +46,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 Object.defineProperty(exports, "__esModule", { value: true });
 var inversify_express_utils_1 = require("inversify-express-utils");
 var typeorm_1 = require("typeorm");
-var bcrypt = require("bcrypt");
+var bcrypt = require("bcryptjs");
 var User_1 = require("../entity/User");
 var RegisterController = /** @class */ (function () {
     function RegisterController() {
@@ -55,7 +54,7 @@ var RegisterController = /** @class */ (function () {
     }
     RegisterController.prototype.registerUser = function (request, response) {
         return __awaiter(this, void 0, void 0, function () {
-            var user, existingUser, salt, savedUser;
+            var user, existingUser, salt, savedUser, error_1;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
@@ -64,17 +63,28 @@ var RegisterController = /** @class */ (function () {
                     case 1:
                         existingUser = _a.sent();
                         if (existingUser.length > 0)
-                            return [2 /*return*/, response.send('Benutzer existiert schon')];
+                            return [2 /*return*/, response.status(400).json({ message: 'Benutzer existiert schon' })];
                         salt = bcrypt.genSaltSync(10);
                         user.password = bcrypt.hashSync(user.password, salt);
+                        user.appointments = [];
+                        user.isAdmin = true;
+                        _a.label = 2;
+                    case 2:
+                        _a.trys.push([2, 5, , 6]);
                         return [4 /*yield*/, this.userRepository.insert(user)];
-                    case 2: return [4 /*yield*/, (_a.sent()).raw.ops[0]];
-                    case 3:
+                    case 3: return [4 /*yield*/, (_a.sent()).raw.ops[0]];
+                    case 4:
                         savedUser = _a.sent();
-                        return [2 /*return*/, response.status(200).json({
-                                message: "Nutzer hinzugefügt",
-                                data: savedUser
+                        return [3 /*break*/, 6];
+                    case 5:
+                        error_1 = _a.sent();
+                        return [2 /*return*/, response.status(500).json({
+                                message: "Fehler beim Speichern des Nutzers"
                             })];
+                    case 6: return [2 /*return*/, response.status(200).json({
+                            message: "Nutzer hinzugefügt",
+                            data: savedUser
+                        })];
                 }
             });
         });

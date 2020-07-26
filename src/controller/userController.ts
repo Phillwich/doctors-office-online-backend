@@ -2,7 +2,7 @@ import { controller, interfaces, httpGet, BaseMiddleware, httpDelete, httpPut } 
 import { Connection, Repository, getRepository, ObjectID } from "typeorm";
 import { inject } from "inversify";
 import { Request, Response } from "express";
-import * as bcrypt from "bcrypt"
+import * as bcrypt from "bcryptjs"
 
 import { User } from "../entity/User";
 import AuthMiddleware from "../middleware/authMiddleware";
@@ -18,6 +18,7 @@ class UserController implements interfaces.Controller {
   @httpGet("/:userId", AuthMiddleware)
   private async getUser(request: Request, response: Response): Promise<Response> {
     const _id: string = request.params.userId;
+    
 
     const user = await this.userRepository.findOne(_id);
 

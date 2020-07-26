@@ -1,5 +1,4 @@
 import { Entity, ObjectIdColumn, ObjectID, Column } from "typeorm";
-import { Appointment } from "./Appointment";
 
 @Entity()
 export class Surgery {

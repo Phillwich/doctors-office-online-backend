@@ -34,9 +34,13 @@ var User = /** @class */ (function () {
         __metadata("design:type", String)
     ], User.prototype, "password", void 0);
     __decorate([
-        typeorm_1.Column({ default: false }),
+        typeorm_1.Column(),
         __metadata("design:type", Boolean)
     ], User.prototype, "isAdmin", void 0);
+    __decorate([
+        typeorm_1.Column(),
+        __metadata("design:type", Array)
+    ], User.prototype, "appointments", void 0);
     User = __decorate([
         typeorm_1.Entity()
     ], User);

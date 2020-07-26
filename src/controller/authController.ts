@@ -2,7 +2,7 @@ import { controller, interfaces, httpPost } from "inversify-express-utils";
 import { Connection, Repository, getRepository } from "typeorm";
 import { inject } from "inversify";
 import { Response, Request } from "express";
-import * as bcrypt from "bcrypt"
+import * as bcrypt from "bcryptjs"
 import * as jwt from "jsonwebtoken"
 import * as config from "config"
 

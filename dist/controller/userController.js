@@ -12,11 +12,10 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
         function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
         function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
@@ -51,10 +50,11 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var inversify_express_utils_1 = require("inversify-express-utils");
 var typeorm_1 = require("typeorm");
 var inversify_1 = require("inversify");
+var bcrypt = require("bcryptjs");
 var User_1 = require("../entity/User");
+var authMiddleware_1 = require("../middleware/authMiddleware");
 var UserController = /** @class */ (function () {
     function UserController(connection) {
-        this.connection = connection;
         this.userRepository = typeorm_1.getRepository(User_1.User);
     }
     UserController.prototype.getUser = function (request, response) {
@@ -68,7 +68,7 @@ var UserController = /** @class */ (function () {
                     case 1:
                         user = _a.sent();
                         if (user === undefined)
-                            return [2 /*return*/, response.json({ message: 'Nutzer existiert nicht' })];
+                            return [2 /*return*/, response.status(404).json({ message: 'Nutzer existiert nicht' })];
                         return [2 /*return*/, response.status(200).json({
                                 message: "Nutzer gefunden",
                                 data: user
@@ -77,12 +77,100 @@ var UserController = /** @class */ (function () {
             });
         });
     };
+    UserController.prototype.updateUser = function (request, response) {
+        return __awaiter(this, void 0, void 0, function () {
+            var updatedUser, user, error_1, _i, _a, key, salt, userId, error_2;
+            return __generator(this, function (_b) {
+                switch (_b.label) {
+                    case 0:
+                        updatedUser = request.body.user;
+                        _b.label = 1;
+                    case 1:
+                        _b.trys.push([1, 3, , 4]);
+                        return [4 /*yield*/, this.userRepository.findOne(updatedUser._id)];
+                    case 2:
+                        user = _b.sent();
+                        return [3 /*break*/, 4];
+                    case 3:
+                        error_1 = _b.sent();
+                        return [2 /*return*/, response.status(404).json({
+                                message: "Nutzer wurde nicht gefunden"
+                            })];
+                    case 4:
+                        for (_i = 0, _a = Object.keys(updatedUser); _i < _a.length; _i++) {
+                            key = _a[_i];
+                            user[key] = updatedUser[key];
+                            if (key === 'password') {
+                                salt = bcrypt.genSaltSync(10);
+                                user.password = bcrypt.hashSync(updatedUser.password, salt);
+                            }
+                        }
+                        userId = user._id;
+                        delete user._id;
+                        _b.label = 5;
+                    case 5:
+                        _b.trys.push([5, 7, , 8]);
+                        return [4 /*yield*/, this.userRepository.update(userId, user)];
+                    case 6:
+                        _b.sent();
+                        return [3 /*break*/, 8];
+                    case 7:
+                        error_2 = _b.sent();
+                        console.log(error_2);
+                        return [2 /*return*/, response.status(500).json({
+                                message: "Konnte Nutzer nicht updaten"
+                            })];
+                    case 8: return [2 /*return*/, response.status(200).json({
+                            message: "Nutzer wurde erfolgreich geupdatet"
+                        })];
+                }
+            });
+        });
+    };
+    UserController.prototype.deleteUser = function (request, response) {
+        return __awaiter(this, void 0, void 0, function () {
+            var userId, error_3;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        userId = request.params.userId;
+                        _a.label = 1;
+                    case 1:
+                        _a.trys.push([1, 3, , 4]);
+                        return [4 /*yield*/, this.userRepository.delete(userId)];
+                    case 2:
+                        _a.sent();
+                        return [3 /*break*/, 4];
+                    case 3:
+                        error_3 = _a.sent();
+                        return [2 /*return*/, response.status(500).json({
+                                message: "Nutzer konnte nicht gelöscht werden"
+                            })];
+                    case 4: return [2 /*return*/, response.status(200).json({
+                            message: "Nutzer wurde erfolgreich gelöscht"
+                        })];
+                }
+            });
+        });
+    };
     __decorate([
-        inversify_express_utils_1.httpGet("/:userId"),
+        inversify_express_utils_1.httpGet("/:userId", authMiddleware_1.default),
         __metadata("design:type", Function),
         __metadata("design:paramtypes", [Object, Object]),
         __metadata("design:returntype", Promise)
     ], UserController.prototype, "getUser", null);
+    __decorate([
+        inversify_express_utils_1.httpPut("/", authMiddleware_1.default),
+        __metadata("design:type", Function),
+        __metadata("design:paramtypes", [Object, Object]),
+        __metadata("design:returntype", Promise)
+    ], UserController.prototype, "updateUser", null);
+    __decorate([
+        inversify_express_utils_1.httpDelete("/:userId", authMiddleware_1.default),
+        __metadata("design:type", Function),
+        __metadata("design:paramtypes", [Object, Object]),
+        __metadata("design:returntype", Promise)
+    ], UserController.prototype, "deleteUser", null);
     UserController = __decorate([
         inversify_express_utils_1.controller('/user'),
         __param(0, inversify_1.inject(typeorm_1.Connection)),

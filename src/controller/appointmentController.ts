@@ -1,5 +1,6 @@
-import { controller, interfaces, httpPost, httpGet } from "inversify-express-utils";
+import { controller, interfaces, httpPost, httpGet, httpDelete } from "inversify-express-utils";
 import { Connection, Repository, getRepository, ObjectID } from "typeorm";
+const ObjectInstance = require('mongodb').ObjectId;
 import { Response, Request } from "express";
 import { inject } from "inversify";
 
@@ -7,6 +8,7 @@ import AuthMiddleware from "../middleware/authMiddleware";
 import { Appointment } from "../entity/Appointment";
 import { User } from "../entity/User";
 import { Surgery } from "../entity/Surgery";
+import { json } from "body-parser";
 
 @controller('/appointment')
 class AppointmentController implements interfaces.Controller {
@@ -112,9 +114,9 @@ class AppointmentController implements interfaces.Controller {
 
     const appointmentIds: ObjectID[] = user.appointments
 
-    
+    let userAppointments: Appointment[]
     try {
-      await this.appointmentRepository.findByIds(appointmentIds)
+      userAppointments = await this.appointmentRepository.findByIds(appointmentIds)
     } catch (error) {
       return response.status(500).json({
         message: "Fehler beie Appointments suchen"
@@ -122,7 +124,77 @@ class AppointmentController implements interfaces.Controller {
     }
 
     return response.status(200).json({
-      message: "Appointments gefunden"
+      message: "Appointments gefunden",
+      data: userAppointments
+    })
+  }
+
+  @httpDelete("/:appointmentId", AuthMiddleware)
+  private async deleteAppointment(request: Request, response: Response): Promise<Response> {
+    const appointmentId: string = request.params.appointmentId
+
+    let appointmentToDelete: Appointment
+    try {
+      appointmentToDelete = await this.appointmentRepository.findOne(appointmentId)
+    } catch (error) {
+      return response.status(500).json({
+        message: "Fehler beim Abfragen des Termins"
+      })
+    }
+
+    const surgeryId = appointmentToDelete.surgeryId
+    const userId = appointmentToDelete.userId
+
+    try {
+      await this.appointmentRepository.delete(appointmentId)
+    } catch (error) {
+      return response.status(500).json({
+        message: "Fehler beim Löschen des Termins"
+      })
+    }
+
+    let user: User
+    try {
+      user = await this.userRepository.findOne(userId)
+    } catch (error) {
+      return response.status(500).json({
+        message: "Fehler beim Laden des Nutzers"
+      })
+    }
+
+    const index = user.appointments.findIndex(element => element === new ObjectInstance(appointmentId))
+    user.appointments.splice(index, 1)
+
+    try {
+      await this.userRepository.save(user)
+    } catch (error) {
+      return response.status(500).json({
+        message: "Fehler beim speichern des Nutzers"
+      })
+    }
+
+    let surgery: Surgery
+    try {
+      surgery = await this.surgeryRepository.findOne(surgeryId)
+    } catch (error) {
+      return response.status(500).json({
+        message: "Fehler beim Laden der Praxis"
+      })
+    }
+
+    const surgeryIndex = surgery.appointments.findIndex(element => element === new ObjectInstance(appointmentId))
+    surgery.appointments.splice(surgeryIndex, 1)
+
+    try {
+      await this.surgeryRepository.save(surgery)
+    } catch (error) {
+      return response.status(500).json({
+        message: "Fehler beim speichern der Praxis"
+      })
+    }
+
+    return response.status(200).json({
+      message: "Termin erfolgreich gelöscht"
     })
   }
 }

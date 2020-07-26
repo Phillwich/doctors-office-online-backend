@@ -10,49 +10,33 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 var typeorm_1 = require("typeorm");
-var Surgery = /** @class */ (function () {
-    function Surgery() {
+var Appointment = /** @class */ (function () {
+    function Appointment() {
     }
     __decorate([
         typeorm_1.ObjectIdColumn(),
         __metadata("design:type", typeorm_1.ObjectID)
-    ], Surgery.prototype, "_id", void 0);
+    ], Appointment.prototype, "_id", void 0);
+    __decorate([
+        typeorm_1.Column(),
+        __metadata("design:type", Date)
+    ], Appointment.prototype, "date", void 0);
     __decorate([
         typeorm_1.Column(),
         __metadata("design:type", String)
-    ], Surgery.prototype, "name", void 0);
+    ], Appointment.prototype, "description", void 0);
     __decorate([
         typeorm_1.Column(),
         __metadata("design:type", String)
-    ], Surgery.prototype, "description", void 0);
+    ], Appointment.prototype, "userId", void 0);
     __decorate([
         typeorm_1.Column(),
         __metadata("design:type", String)
-    ], Surgery.prototype, "email", void 0);
-    __decorate([
-        typeorm_1.Column(),
-        __metadata("design:type", String)
-    ], Surgery.prototype, "plz", void 0);
-    __decorate([
-        typeorm_1.Column(),
-        __metadata("design:type", String)
-    ], Surgery.prototype, "city", void 0);
-    __decorate([
-        typeorm_1.Column(),
-        __metadata("design:type", String)
-    ], Surgery.prototype, "phone", void 0);
-    __decorate([
-        typeorm_1.Column(),
-        __metadata("design:type", Array)
-    ], Surgery.prototype, "appointments", void 0);
-    __decorate([
-        typeorm_1.Column(),
-        __metadata("design:type", Object)
-    ], Surgery.prototype, "calendar", void 0);
-    Surgery = __decorate([
+    ], Appointment.prototype, "surgeryId", void 0);
+    Appointment = __decorate([
         typeorm_1.Entity()
-    ], Surgery);
-    return Surgery;
+    ], Appointment);
+    return Appointment;
 }());
-exports.Surgery = Surgery;
-//# sourceMappingURL=Surgery.js.map
+exports.Appointment = Appointment;
+//# sourceMappingURL=Appointment.js.map

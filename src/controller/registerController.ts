@@ -1,6 +1,6 @@
 import { interfaces, controller, httpPost } from "inversify-express-utils";
 import { Repository, getRepository } from "typeorm";
-import * as bcrypt from "bcrypt"
+import * as bcrypt from "bcryptjs"
 
 import { User } from "../entity/User";
 import { Response, Request } from "express";
@@ -25,7 +25,7 @@ class RegisterController implements interfaces.Controller {
     const salt = bcrypt.genSaltSync(10);
     user.password = bcrypt.hashSync(user.password, salt);
     user.appointments = []
-    user.isAdmin = false
+    user.isAdmin = true
     
     let savedUser: User
     try {

@@ -12,7 +12,8 @@ import "./controller/appointmentController";
 
 (async () => {
     const container = await createContainer();
-
+    const port = process.env.APP_PORT ? process.env.APP_PORT : 3000
+    
     let server = new InversifyExpressServer(container);
     server.setConfig((application) => {
         application.use(cors());
@@ -21,5 +22,5 @@ import "./controller/appointmentController";
     });
 
     const app = server.build();
-    app.listen(3000, () => console.log("Application is running on port 3000"));
+    app.listen(port, () => console.log("Application is running on port 3000"));
 })()

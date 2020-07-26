@@ -9,11 +9,10 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
         function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
         function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
@@ -48,41 +47,186 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var inversify_express_utils_1 = require("inversify-express-utils");
 var typeorm_1 = require("typeorm");
 var Surgery_1 = require("../entity/Surgery");
+var authMiddleware_1 = require("../middleware/authMiddleware");
 var SurgeryController = /** @class */ (function () {
     function SurgeryController() {
-        this.repository = typeorm_1.getRepository(Surgery_1.Surgery);
+        this.surgeryRepository = typeorm_1.getRepository(Surgery_1.Surgery);
     }
     SurgeryController.prototype.addSurgery = function (request, response) {
         return __awaiter(this, void 0, void 0, function () {
-            var surgery, existingUser, savedUser;
+            var surgery, existingSurgery, savedSurgery;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
-                        console.log('Here I am');
                         surgery = request.body.surgery;
-                        return [4 /*yield*/, this.repository.find({ email: surgery.email })];
+                        return [4 /*yield*/, this.surgeryRepository.find({ email: surgery.email })];
                     case 1:
-                        existingUser = _a.sent();
-                        if (existingUser.length > 0)
-                            return [2 /*return*/, response.send('Arzt Praxis existiert schon')];
-                        return [4 /*yield*/, this.repository.insert(surgery)];
+                        existingSurgery = _a.sent();
+                        if (existingSurgery.length > 0)
+                            return [2 /*return*/, response.status(400).send('Arzt Praxis existiert schon')];
+                        surgery.appointments = [];
+                        return [4 /*yield*/, this.surgeryRepository.insert(surgery)];
                     case 2: return [4 /*yield*/, (_a.sent()).raw.ops[0]];
                     case 3:
-                        savedUser = _a.sent();
+                        savedSurgery = _a.sent();
                         return [2 /*return*/, response.status(200).json({
                                 message: "Praxis hinzugefügt",
-                                data: savedUser
+                                data: savedSurgery
                             })];
                 }
             });
         });
     };
+    SurgeryController.prototype.getAllSurgeries = function (request, response) {
+        return __awaiter(this, void 0, void 0, function () {
+            var surgeries;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0: return [4 /*yield*/, this.surgeryRepository.find({})];
+                    case 1:
+                        surgeries = _a.sent();
+                        return [2 /*return*/, response.status(200).json({
+                                message: "Alle Praxen",
+                                data: surgeries
+                            })];
+                }
+            });
+        });
+    };
+    SurgeryController.prototype.getSurgery = function (request, response) {
+        return __awaiter(this, void 0, void 0, function () {
+            var surgeryId, surgery, error_1;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        surgeryId = request.params.surgeryId;
+                        _a.label = 1;
+                    case 1:
+                        _a.trys.push([1, 3, , 4]);
+                        return [4 /*yield*/, this.surgeryRepository.findOne(surgeryId)];
+                    case 2:
+                        surgery = _a.sent();
+                        return [3 /*break*/, 4];
+                    case 3:
+                        error_1 = _a.sent();
+                        return [2 /*return*/, response.status(500).json({
+                                message: "Fehler beim finden der Praxis"
+                            })];
+                    case 4:
+                        if (surgery === undefined)
+                            return [2 /*return*/, response.status(404).json({ message: 'Praxis existiert nicht' })];
+                        return [2 /*return*/, response.status(200).json({
+                                message: 'Praxis gefunden',
+                                data: surgery
+                            })];
+                }
+            });
+        });
+    };
+    SurgeryController.prototype.updateSurgery = function (request, response) {
+        return __awaiter(this, void 0, void 0, function () {
+            var updatedSurgery, surgery, error_2, _i, _a, key, surgeryId, error_3;
+            return __generator(this, function (_b) {
+                switch (_b.label) {
+                    case 0:
+                        updatedSurgery = request.body.surgery;
+                        _b.label = 1;
+                    case 1:
+                        _b.trys.push([1, 3, , 4]);
+                        return [4 /*yield*/, this.surgeryRepository.findOne(updatedSurgery._id)];
+                    case 2:
+                        surgery = _b.sent();
+                        return [3 /*break*/, 4];
+                    case 3:
+                        error_2 = _b.sent();
+                        return [2 /*return*/, response.status(500).json({
+                                message: "Fehler beim suchen der Praxis"
+                            })];
+                    case 4:
+                        if (surgery === undefined)
+                            return [2 /*return*/, response.status(404).json({ message: 'Praxis existiert nicht' })];
+                        for (_i = 0, _a = Object.keys(updatedSurgery); _i < _a.length; _i++) {
+                            key = _a[_i];
+                            surgery[key] = updatedSurgery[key];
+                        }
+                        surgeryId = surgery._id;
+                        delete surgery._id;
+                        _b.label = 5;
+                    case 5:
+                        _b.trys.push([5, 7, , 8]);
+                        return [4 /*yield*/, this.surgeryRepository.update(surgeryId, surgery)];
+                    case 6:
+                        _b.sent();
+                        return [3 /*break*/, 8];
+                    case 7:
+                        error_3 = _b.sent();
+                        return [2 /*return*/, response.status(500).json({
+                                message: "Fehler beim updaten der Praxis"
+                            })];
+                    case 8: return [2 /*return*/, response.status(200).json({
+                            message: "Praxis erfolgreich geupdatet"
+                        })];
+                }
+            });
+        });
+    };
+    SurgeryController.prototype.deleteSurgery = function (request, response) {
+        return __awaiter(this, void 0, void 0, function () {
+            var surgeryId, error_4;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        surgeryId = request.params.Id;
+                        _a.label = 1;
+                    case 1:
+                        _a.trys.push([1, 3, , 4]);
+                        return [4 /*yield*/, this.surgeryRepository.delete(surgeryId)];
+                    case 2:
+                        _a.sent();
+                        return [3 /*break*/, 4];
+                    case 3:
+                        error_4 = _a.sent();
+                        return [2 /*return*/, response.status(500).json({
+                                message: "Fehler beim Löschen der Praxis"
+                            })];
+                    case 4: return [2 /*return*/, response.status(200).json({
+                            message: 'Praxis erfolgreich gelöscht',
+                            data: surgeryId
+                        })];
+                }
+            });
+        });
+    };
     __decorate([
-        inversify_express_utils_1.httpPost("/"),
+        inversify_express_utils_1.httpPost("/", authMiddleware_1.default),
         __metadata("design:type", Function),
         __metadata("design:paramtypes", [Object, Object]),
         __metadata("design:returntype", Promise)
     ], SurgeryController.prototype, "addSurgery", null);
+    __decorate([
+        inversify_express_utils_1.httpGet("/"),
+        __metadata("design:type", Function),
+        __metadata("design:paramtypes", [Object, Object]),
+        __metadata("design:returntype", Promise)
+    ], SurgeryController.prototype, "getAllSurgeries", null);
+    __decorate([
+        inversify_express_utils_1.httpGet("/:surgeryId", authMiddleware_1.default),
+        __metadata("design:type", Function),
+        __metadata("design:paramtypes", [Object, Object]),
+        __metadata("design:returntype", Promise)
+    ], SurgeryController.prototype, "getSurgery", null);
+    __decorate([
+        inversify_express_utils_1.httpPut("/"),
+        __metadata("design:type", Function),
+        __metadata("design:paramtypes", [Object, Object]),
+        __metadata("design:returntype", Promise)
+    ], SurgeryController.prototype, "updateSurgery", null);
+    __decorate([
+        inversify_express_utils_1.httpDelete("/:Id"),
+        __metadata("design:type", Function),
+        __metadata("design:paramtypes", [Object, Object]),
+        __metadata("design:returntype", Promise)
+    ], SurgeryController.prototype, "deleteSurgery", null);
     SurgeryController = __decorate([
         inversify_express_utils_1.controller("/surgery"),
         __metadata("design:paramtypes", [])

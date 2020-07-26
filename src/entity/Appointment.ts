@@ -1,4 +1,4 @@
-import { Entity, ObjectID, ObjectIdColumn, Column, Timestamp } from "typeorm";
+import { Entity, ObjectID, ObjectIdColumn, Column } from "typeorm";
 
 @Entity()
 export class Appointment {
