@@ -1,8 +1,8 @@
 {
    "type": "mongodb",
-   "database": "heroku_dxxbdgv5",
-   "host": "heroku_dxxbdgv5:vbqhdvdjuqkc4je94h591pnbsq@ds153096.mlab.com",
-   "port": 53096,
+   "database": "doctors-office",
+   "host": "db",
+   "port": 27017,
    "synchronize": true,
    "logging": false,
    "entities": [

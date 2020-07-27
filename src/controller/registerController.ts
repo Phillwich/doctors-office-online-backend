@@ -25,7 +25,7 @@ class RegisterController implements interfaces.Controller {
     const salt = bcrypt.genSaltSync(10);
     user.password = bcrypt.hashSync(user.password, salt);
     user.appointments = []
-    user.isAdmin = true
+    user.isAdmin = false
     
     let savedUser: User
     try {
