@@ -20,7 +20,7 @@
       "jsonwebtoken": "^8.5.1",
       "mongodb": "^3.5.8",
       "reflect-metadata": "^0.1.10",
-      "typeorm": "0.2.24"
+      "typeorm": "0.2.25"
    },
    "scripts": {
       "dev": "ts-node-dev src/index.ts",
